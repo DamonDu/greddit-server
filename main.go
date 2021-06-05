@@ -28,14 +28,16 @@ func main() {
 	}))
 	router.Use(middleware.AuthToken())
 	router.Use(middleware.Errors())
+	router.Use(gin.Logger())
 
 	// user
 	userHandler := handler.NewUserHandler(apps)
 	userRouter := router.Group("/user")
 	{
-		userRouter.POST("/me", middleware.AuthUser(), userHandler.Me)
+		userRouter.POST("/me", userHandler.Me)
 		userRouter.POST("/register", userHandler.Register)
 		userRouter.POST("/login", userHandler.Login)
+		userRouter.POST("/logout", userHandler.Logout)
 	}
 
 	// post
@@ -43,6 +45,7 @@ func main() {
 	postRouter := router.Group("/post")
 	{
 		postRouter.POST("/pageQuery", postHandler.PageQuery)
+		postRouter.POST("/create", middleware.AuthUser(), postHandler.Create)
 	}
 	runErr := router.Run(":8080")
 	if runErr != nil {

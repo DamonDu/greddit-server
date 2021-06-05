@@ -1,15 +1,16 @@
 package handler
 
 import (
+	"errors"
 	"github.com/damondu/greddit/application"
 	"github.com/damondu/greddit/domain/entity"
-	. "github.com/damondu/greddit/utils"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 )
 
 type UserHandler struct {
-	app application.UserApp
+	app *application.UserApp
 }
 
 func NewUserHandler(apps *application.App) *UserHandler {
@@ -17,10 +18,14 @@ func NewUserHandler(apps *application.App) *UserHandler {
 }
 
 func (h *UserHandler) Me(c *gin.Context) {
-	uid := GetUid(c)
+	uid := c.GetInt64("uid")
 	me, meErr := h.app.Me(uid)
 	if meErr != nil {
-		c.Error(meErr)
+		if errors.Is(meErr, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusOK, nil)
+		} else {
+			c.Error(meErr)
+		}
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -36,7 +41,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		Email    string `json:"email" binding:"required"`
 	}
 	var body json
-	bindErr := c.ShouldBindJSON(&body)
+	bindErr := c.Bind(&body)
 	if bindErr != nil {
 		c.Error(bindErr)
 		return
@@ -46,7 +51,8 @@ func (h *UserHandler) Register(c *gin.Context) {
 		c.Error(appErr)
 		return
 	}
-	SetContextCookies(c, &user)
+	cookie := entity.NewUserCookie(&user)
+	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.Secure)
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
@@ -73,5 +79,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 		c.Error(appErr)
 		return
 	}
-	SetContextCookies(c, &user)
+	cookie := entity.NewUserCookie(&user)
+	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.Secure)
+}
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	cookie := entity.NewUserCookie(nil)
+	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
 }

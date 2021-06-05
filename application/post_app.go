@@ -3,28 +3,22 @@ package application
 import (
 	"github.com/damondu/greddit/domain/entity"
 	"github.com/damondu/greddit/infrastructure/persistence"
+	"math/rand"
 )
 
-type PostApp interface {
-	PageQueryPost(page int, pageSize int) (entity.Posts, error)
-	PageQueryPostUser(page int, pageSize int) (entity.PostUsers, error)
-}
-
-type postApplication struct {
+type PostApp struct {
 	postRepo persistence.PostRepo
 	userRepo persistence.UserRepo
 }
 
-var _ PostApp = &postApplication{}
-
-func NewPostApplication(repositories *persistence.Repositories) *postApplication {
-	return &postApplication{
+func NewPostApp(repositories *persistence.Repositories) *PostApp {
+	return &PostApp{
 		postRepo: repositories.Post,
 		userRepo: repositories.User,
 	}
 }
 
-func (p postApplication) PageQueryPost(page int, pageSize int) (entity.Posts, error) {
+func (p *PostApp) PageQueryPost(page int, pageSize int) (entity.Posts, error) {
 	posts, err := p.postRepo.PageQuery(page, pageSize)
 	if err != nil {
 		return nil, err
@@ -32,7 +26,7 @@ func (p postApplication) PageQueryPost(page int, pageSize int) (entity.Posts, er
 	return posts, err
 }
 
-func (p postApplication) PageQueryPostUser(page int, pageSize int) (entity.PostUsers, error) {
+func (p *PostApp) PageQueryPostUser(page int, pageSize int) (entity.PostUsers, error) {
 	posts, err := p.PageQueryPost(page, pageSize)
 	if err != nil {
 		return nil, err
@@ -52,4 +46,8 @@ func (p postApplication) PageQueryPostUser(page int, pageSize int) (entity.PostU
 		}
 	})
 	return postUsers, err
+}
+
+func (p *PostApp) Create(creatorUid int64, title, text string) (entity.Post, error) {
+	return p.postRepo.Create(int64(rand.Int31()), creatorUid, title, text)
 }
