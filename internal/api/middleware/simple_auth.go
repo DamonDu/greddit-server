@@ -23,10 +23,19 @@ func NewSimpleAuth(strongAuth bool) fiber.Handler {
 }
 
 func CheckLogin(ctx *fiber.Ctx) int64 {
-	if uid, ok := ctx.Locals(uidHttpKey).(int64); !ok {
+	uid := GetUid(ctx)
+	if uid == nil {
 		panic(error2.NoLoginError)
 	} else {
-		return uid
+		return *uid
+	}
+}
+
+func GetUid(ctx *fiber.Ctx) *int64 {
+	if uid, ok := ctx.Locals(uidHttpKey).(int64); !ok {
+		return nil
+	} else {
+		return &uid
 	}
 }
 

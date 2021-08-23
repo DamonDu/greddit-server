@@ -44,7 +44,7 @@ func (h *PostHandler) PageQuery(ctx *fiber.Ctx) error {
 			return fiber.Map{
 				"postId":    p.PostId,
 				"title":     p.Title,
-				"text":      stringutil.MaxLastCharsWithDots(p.Text, 250),
+				"text":      stringutil.MaxFirstCharsWithDots(p.Text, 250),
 				"voteCount": p.VoteCount,
 				"uid":       p.Uid,
 				"username":  p.Username,

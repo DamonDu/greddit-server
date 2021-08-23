@@ -9,7 +9,7 @@ import (
 type App interface {
 	QueryByUid(uid int64) (User, error)
 	BatchGetByUid(uidList []int64) (Users, error)
-	Register(username, password, email string) (User, error)
+	Register(username, email, password string) (User, error)
 	LoginByUsername(username, password string) (User, error)
 	LoginByEmail(email, password string) (User, error)
 }
@@ -30,7 +30,7 @@ func (a app) BatchGetByUid(uidList []int64) (Users, error) {
 	return a.repository.BatchGetByUid(uidList)
 }
 
-func (a app) Register(username, password, email string) (User, error) {
+func (a app) Register(username, email, password string) (User, error) {
 	usernameExists, err := a.repository.UsernameExists(username)
 	if err != nil {
 		return User{}, err

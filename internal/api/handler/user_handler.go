@@ -26,7 +26,7 @@ func NewUserHandler(userApp user.App) UserHandler {
 		App:     fiber.New(),
 		userApp: userApp,
 	}
-	handler.Post("/me", middleware.NewSimpleAuth(true), handler.Me)
+	handler.Post("/me", middleware.NewSimpleAuth(false), handler.Me)
 	handler.Post("/register", handler.Register)
 	handler.Post("/login", handler.Login)
 	handler.Post("/logout", handler.Logout)
@@ -34,8 +34,11 @@ func NewUserHandler(userApp user.App) UserHandler {
 }
 
 func (h *UserHandler) Me(ctx *fiber.Ctx) error {
-	uid := middleware.CheckLogin(ctx)
-	me, err := h.userApp.QueryByUid(uid)
+	uid := middleware.GetUid(ctx)
+	if uid == nil {
+		return ctx.JSON(nil)
+	}
+	me, err := h.userApp.QueryByUid(*uid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
@@ -43,14 +46,10 @@ func (h *UserHandler) Me(ctx *fiber.Ctx) error {
 			panic(err)
 		}
 	}
-	err = ctx.JSON(fiber.Map{
+	return ctx.JSON(fiber.Map{
 		"username": me.Username,
 		"email":    me.Email,
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (h *UserHandler) Register(ctx *fiber.Ctx) error {

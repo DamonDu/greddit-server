@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/damondu/greddit/internal/api/handler"
+	"github.com/damondu/greddit/internal/api/middleware"
 	db2 "github.com/damondu/greddit/internal/pkg/db"
 	"github.com/damondu/greddit/internal/post"
 	"github.com/damondu/greddit/internal/user"
@@ -53,7 +54,7 @@ func NewApp() (App, error) {
 	userApp := user.NewApp(userRepository)
 	postApp := post.NewApp(postRepository, userApp)
 
-	fiberApp := fiber.New()
+	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
 	fiberApp.Use(recover2.New())
 	fiberApp.Use(cors.New(cors.Config{
 
