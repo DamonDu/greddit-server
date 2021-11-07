@@ -1,9 +1,10 @@
 package user
 
 import (
-	error2 "github.com/damondu/greddit/pkg/error"
 	"math/rand"
 	"strings"
+
+	error2 "github.com/duyike/greddit/pkg/errors"
 )
 
 type App interface {

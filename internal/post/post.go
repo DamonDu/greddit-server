@@ -1,8 +1,9 @@
 package post
 
 import (
-	"github.com/damondu/greddit/internal/user"
 	"time"
+
+	"github.com/duyike/greddit/internal/user"
 )
 
 type Post struct {

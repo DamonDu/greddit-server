@@ -2,10 +2,11 @@ package handler
 
 import (
 	"github.com/bitrise-io/go-utils/stringutil"
-	"github.com/damondu/greddit/internal/api/middleware"
-	"github.com/damondu/greddit/internal/post"
-	math2 "github.com/damondu/greddit/pkg/math"
 	"github.com/gofiber/fiber/v2"
+
+	"github.com/duyike/greddit/internal/api/middleware"
+	"github.com/duyike/greddit/internal/post"
+	math2 "github.com/duyike/greddit/pkg/math"
 )
 
 type PostHandler struct {
