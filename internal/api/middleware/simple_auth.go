@@ -1,10 +1,12 @@
 package middleware
 
 import (
-	error2 "github.com/damondu/greddit/pkg/error"
-	"github.com/gofiber/fiber/v2"
 	"os"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+
+	error2 "github.com/duyike/greddit/pkg/errors"
 )
 
 var (

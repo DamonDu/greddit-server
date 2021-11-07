@@ -2,13 +2,15 @@ package handler
 
 import (
 	"errors"
-	"github.com/damondu/greddit/internal/api/middleware"
-	"github.com/damondu/greddit/internal/user"
-	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
+
+	"github.com/duyike/greddit/internal/api/middleware"
+	"github.com/duyike/greddit/internal/user"
 )
 
 var (

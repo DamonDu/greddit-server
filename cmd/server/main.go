@@ -1,17 +1,25 @@
 package main
 
 import (
-	"github.com/damondu/greddit/internal/api"
-	"go.uber.org/zap"
 	"net/http"
 	"os"
+
+	"github.com/joho/godotenv"
+	"go.uber.org/zap"
+
+	"github.com/duyike/greddit/internal/api"
 )
 
 var (
-	logger, _ = zap.NewProduction(zap.Fields(zap.String("type", "main")))
+	logger, _ = zap.NewProduction(zap.Fields(zap.String("type", "server")))
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		logger.Fatal("Error loading .env file")
+	}
+
 	var (
 		port     = os.Getenv("PORT")
 		addr     = ":" + port

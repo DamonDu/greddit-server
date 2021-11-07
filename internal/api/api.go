@@ -1,22 +1,24 @@
 package api
 
 import (
-	"github.com/damondu/greddit/internal/api/handler"
-	"github.com/damondu/greddit/internal/api/middleware"
-	db2 "github.com/damondu/greddit/internal/pkg/db"
-	"github.com/damondu/greddit/internal/post"
-	"github.com/damondu/greddit/internal/user"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	logger2 "github.com/gofiber/fiber/v2/middleware/logger"
-	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
-	"go.uber.org/zap"
 	"math/rand"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
+	fiberRecover "github.com/gofiber/fiber/v2/middleware/recover"
+	"go.uber.org/zap"
+
+	"github.com/duyike/greddit/internal/api/handler"
+	"github.com/duyike/greddit/internal/api/middleware"
+	internalDB "github.com/duyike/greddit/internal/pkg/db"
+	"github.com/duyike/greddit/internal/post"
+	"github.com/duyike/greddit/internal/user"
 )
 
 var (
@@ -26,6 +28,7 @@ var (
 type App interface {
 	GracefulShutdown(shutdown chan struct{})
 	Listen(addr string) error
+	FiberApp() *fiber.App
 }
 
 type app struct {
@@ -38,15 +41,15 @@ func NewApp() (App, error) {
 		shutdowns []func() error
 	)
 	rand.Seed(time.Now().UnixNano())
-	db, err := db2.NewDb()
+	db, err := internalDB.NewDb()
 	if err != nil {
 		return nil, err
 	}
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, err
-	}
-	shutdowns = append(shutdowns, sqlDB.Close)
+	//sqlDB, err := db.DB()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//shutdowns = append(shutdowns, sqlDB.Close)
 
 	userRepository := user.NewRepository(db)
 	postRepository := post.NewRepository(db)
@@ -55,7 +58,7 @@ func NewApp() (App, error) {
 	postApp := post.NewApp(postRepository, userApp)
 
 	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
-	fiberApp.Use(recover2.New())
+	fiberApp.Use(fiberRecover.New())
 	fiberApp.Use(cors.New(cors.Config{
 
 		AllowHeaders: strings.Join([]string{
@@ -65,7 +68,10 @@ func NewApp() (App, error) {
 		}, ","),
 		AllowCredentials: true,
 	}))
-	fiberApp.Use(logger2.New())
+	fiberApp.Use(fiberLogger.New())
+	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusOK).SendString("ok")
+	})
 	fiberApp.Mount("/user", handler.NewUserHandler(userApp).App)
 	fiberApp.Mount("/post", handler.NewPostHandler(postApp).App)
 	return app{
@@ -95,4 +101,10 @@ func (a app) GracefulShutdown(shutdown chan struct{}) {
 	close(shutdown)
 }
 
-var _ App = &app{}
+func (a app) Listen(addr string) error {
+	return a.App.Listen(addr)
+}
+
+func (a app) FiberApp() *fiber.App {
+	return a.App
+}

@@ -1,8 +1,9 @@
 package post
 
 import (
-	"github.com/damondu/greddit/internal/pkg/db"
 	"gorm.io/gorm"
+
+	"github.com/duyike/greddit/internal/pkg/db"
 )
 
 var _ Repository = (*repository)(nil)

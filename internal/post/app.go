@@ -1,8 +1,9 @@
 package post
 
 import (
-	"github.com/damondu/greddit/internal/user"
 	"math/rand"
+
+	"github.com/duyike/greddit/internal/user"
 )
 
 var _ App = &app{}
