@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"gorm.io/gorm"
+
+	"github.com/duyike/greddit/internal/model"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
@@ -41,18 +45,23 @@ func NewApp() (App, error) {
 		shutdowns []func() error
 	)
 	rand.Seed(time.Now().UnixNano())
-	db, err := db.NewDb()
+	database, err := db.NewDb()
 	if err != nil {
 		return nil, err
 	}
-	sqlDB, err := db.DB()
+	sqlDB, err := database.DB()
 	if err != nil {
 		return nil, err
 	}
 	shutdowns = append(shutdowns, sqlDB.Close)
 
-	userRepository := repository.NewUserRepo(db)
-	postRepository := repository.NewPostRepo(db)
+	err = autoMigrate(database)
+	if err != nil {
+		return nil, err
+	}
+
+	userRepository := repository.NewUserRepo(database)
+	postRepository := repository.NewPostRepo(database)
 
 	userApp := service.NewUserService(userRepository)
 	postApp := service.NewPostService(postRepository, userApp)
@@ -107,4 +116,15 @@ func (a app) Listen(addr string) error {
 
 func (a app) FiberApp() *fiber.App {
 	return a.App
+}
+
+func autoMigrate(database *gorm.DB) error {
+	models := []interface{}{&model.User{}, &model.Post{}}
+	for _, m := range models {
+		err := database.AutoMigrate(m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

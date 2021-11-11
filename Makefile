@@ -9,7 +9,7 @@ lambda:
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/lambda ./cmd/lambda/main.go
 
 deploy: clean lambda
-	sls deploy --verbose
+	sls deploy --env prod --verbose
 
 clean:
 	rm -rf ./bin
