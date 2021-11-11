@@ -10,7 +10,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/duyike/greddit/internal/api/middleware"
-	"github.com/duyike/greddit/internal/user"
+	"github.com/duyike/greddit/internal/model"
+	"github.com/duyike/greddit/internal/service"
 )
 
 var (
@@ -20,10 +21,10 @@ var (
 
 type UserHandler struct {
 	*fiber.App
-	userApp user.App
+	userApp service.UserService
 }
 
-func NewUserHandler(userApp user.App) UserHandler {
+func NewUserHandler(userApp service.UserService) UserHandler {
 	handler := UserHandler{
 		App:     fiber.New(),
 		userApp: userApp,
@@ -85,7 +86,7 @@ func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 		panic(err)
 	}
 
-	var u user.User
+	var u model.User
 	var appErr error
 	if body.Username != "" {
 		u, appErr = h.userApp.LoginByUsername(body.Username, body.Password)
@@ -104,7 +105,7 @@ func (h *UserHandler) Logout(ctx *fiber.Ctx) error {
 	return nil
 }
 
-func (h UserHandler) buildCookie(user *user.User) *fiber.Cookie {
+func (h UserHandler) buildCookie(user *model.User) *fiber.Cookie {
 	var (
 		value  = ""
 		maxAge = -1

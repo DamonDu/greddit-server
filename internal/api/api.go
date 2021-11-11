@@ -16,9 +16,9 @@ import (
 
 	"github.com/duyike/greddit/internal/api/handler"
 	"github.com/duyike/greddit/internal/api/middleware"
-	internalDB "github.com/duyike/greddit/internal/pkg/db"
-	"github.com/duyike/greddit/internal/post"
-	"github.com/duyike/greddit/internal/user"
+	"github.com/duyike/greddit/internal/pkg/db"
+	"github.com/duyike/greddit/internal/repository"
+	"github.com/duyike/greddit/internal/service"
 )
 
 var (
@@ -41,26 +41,25 @@ func NewApp() (App, error) {
 		shutdowns []func() error
 	)
 	rand.Seed(time.Now().UnixNano())
-	db, err := internalDB.NewDb()
+	db, err := db.NewDb()
 	if err != nil {
 		return nil, err
 	}
-	//sqlDB, err := db.DB()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//shutdowns = append(shutdowns, sqlDB.Close)
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	shutdowns = append(shutdowns, sqlDB.Close)
 
-	userRepository := user.NewRepository(db)
-	postRepository := post.NewRepository(db)
+	userRepository := repository.NewUserRepo(db)
+	postRepository := repository.NewPostRepo(db)
 
-	userApp := user.NewApp(userRepository)
-	postApp := post.NewApp(postRepository, userApp)
+	userApp := service.NewUserService(userRepository)
+	postApp := service.NewPostService(postRepository, userApp)
 
 	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
 	fiberApp.Use(fiberRecover.New())
 	fiberApp.Use(cors.New(cors.Config{
-
 		AllowHeaders: strings.Join([]string{
 			fiber.HeaderOrigin,
 			fiber.HeaderContentLength,
@@ -69,6 +68,7 @@ func NewApp() (App, error) {
 		AllowCredentials: true,
 	}))
 	fiberApp.Use(fiberLogger.New())
+
 	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("ok")
 	})

@@ -4,17 +4,20 @@ import (
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/duyike/greddit/internal/service"
+
+	"github.com/duyike/greddit/internal/model"
+
 	"github.com/duyike/greddit/internal/api/middleware"
-	"github.com/duyike/greddit/internal/post"
-	math2 "github.com/duyike/greddit/pkg/math"
+	"github.com/duyike/greddit/pkg/maths"
 )
 
 type PostHandler struct {
 	*fiber.App
-	postApp post.App
+	postApp service.PostService
 }
 
-func NewPostHandler(postApp post.App) PostHandler {
+func NewPostHandler(postApp service.PostService) PostHandler {
 	handler := PostHandler{
 		App:     fiber.New(),
 		postApp: postApp,
@@ -38,10 +41,10 @@ func (h *PostHandler) PageQuery(ctx *fiber.Ctx) error {
 	if err != nil {
 		panic(err)
 	}
-	var realPostUsers = postUsers[:math2.Min(len(postUsers), body.PageSize)]
+	var realPostUsers = postUsers[:maths.Min(len(postUsers), body.PageSize)]
 	err = ctx.JSON(fiber.Map{
 		"hasMore": len(postUsers) > body.PageSize,
-		"list": realPostUsers.MapInterface(func(p *post.WithUser) interface{} {
+		"list": realPostUsers.MapInterface(func(p *model.WithUser) interface{} {
 			return fiber.Map{
 				"postId":    p.PostId,
 				"title":     p.Title,

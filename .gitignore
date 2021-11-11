@@ -19,3 +19,5 @@ bin/
 
 # env
 .env
+.env.local
+.env.prod

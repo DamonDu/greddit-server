@@ -1,9 +1,7 @@
-package post
+package model
 
 import (
 	"time"
-
-	"github.com/duyike/greddit/internal/user"
 )
 
 type Post struct {
@@ -22,9 +20,37 @@ type Post struct {
 
 type WithUser struct {
 	Post
-	user.User
+	User
 }
 
 func (p *Post) GetCreatorUid() int64 {
 	return p.CreatorUid
+}
+
+type Posts []Post
+
+func (s *Posts) MapInt64(fc func(something *Post) int64) []int64 {
+	results := make([]int64, len(*s))
+	for i, something := range *s {
+		results[i] = fc(&something)
+	}
+	return results
+}
+
+func (s *Posts) MapWithUser(fc func(something *Post) WithUser) []WithUser {
+	results := make([]WithUser, len(*s))
+	for i, something := range *s {
+		results[i] = fc(&something)
+	}
+	return results
+}
+
+type WithUsers []WithUser
+
+func (s *WithUsers) MapInterface(fc func(something *WithUser) interface{}) []interface{} {
+	results := make([]interface{}, len(*s))
+	for i, something := range *s {
+		results[i] = fc(&something)
+	}
+	return results
 }

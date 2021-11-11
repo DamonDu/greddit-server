@@ -1,4 +1,4 @@
-package user
+package model
 
 import "time"
 
@@ -17,4 +17,14 @@ type User struct {
 
 func (u *User) GetUserUid() int64 {
 	return u.Uid
+}
+
+type Users []User
+
+func (s *Users) GroupByInt64(fc func(something *User) int64) map[int64]User {
+	results := make(map[int64]User, len(*s))
+	for _, something := range *s {
+		results[fc(&something)] = something
+	}
+	return results
 }
