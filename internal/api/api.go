@@ -8,18 +8,16 @@ import (
 	"syscall"
 	"time"
 
-	"gorm.io/gorm"
-
-	"github.com/duyike/greddit/internal/model"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	fiberRecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/duyike/greddit/internal/api/handler"
 	"github.com/duyike/greddit/internal/api/middleware"
+	"github.com/duyike/greddit/internal/model"
 	"github.com/duyike/greddit/internal/pkg/db"
 	"github.com/duyike/greddit/internal/repository"
 	"github.com/duyike/greddit/internal/service"

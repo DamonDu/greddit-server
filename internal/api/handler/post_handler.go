@@ -4,11 +4,9 @@ import (
 	"github.com/bitrise-io/go-utils/stringutil"
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/duyike/greddit/internal/service"
-
-	"github.com/duyike/greddit/internal/model"
-
 	"github.com/duyike/greddit/internal/api/middleware"
+	"github.com/duyike/greddit/internal/model"
+	"github.com/duyike/greddit/internal/service"
 	"github.com/duyike/greddit/pkg/maths"
 )
 
