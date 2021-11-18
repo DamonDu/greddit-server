@@ -21,8 +21,8 @@ type userService struct {
 	repository repository.UserRepo
 }
 
-func NewUserService(repository2 repository.UserRepo) UserService {
-	return &userService{repository: repository2}
+func NewUserService(repo repository.UserRepo) UserService {
+	return &userService{repository: repo}
 }
 
 func (u userService) QueryByUid(uid int64) (model.User, error) {

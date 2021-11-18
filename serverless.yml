@@ -11,13 +11,12 @@ provider:
   name: aws
   runtime: go1.x
   lambdaHashingVersion: 20201221
-  stage: dev
+  stage: prod
   region: ap-northeast-1
   environment:
     PORT: ${env.PORT}
-
     UID_COOKIE_NAME: ${env.UID_COOKIE_NAME}
-    UID_HTTP_KEY: ${env.POUID_HTTP_KEYRT}
+    UID_HTTP_KEY: ${env.UID_HTTP_KEY}
 
 # Lambda function's IAM Role
 #  iamRoleStatements:

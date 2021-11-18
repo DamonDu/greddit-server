@@ -1,15 +1,15 @@
 .PHONY: build deploy clean gen
 
-build:
+build: clean
 	export GO111MODULE=on
+	export CGO_ENABLED=1
 	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/server ./cmd/server/main.go
 
-lambda:
-	export GO111MODULE=on
-	env GOARCH=amd64 GOOS=linux go build -ldflags="-s -w" -o bin/lambda ./cmd/lambda/main.go
+lambda: clean
+	scripts/lambda.sh
 
 deploy: clean lambda
-	sls deploy --env prod --verbose
+	sls deploy --verbose
 
 clean:
 	rm -rf ./bin

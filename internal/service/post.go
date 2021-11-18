@@ -20,9 +20,9 @@ type postServiceImpl struct {
 	userApp    UserService
 }
 
-func NewPostService(repository2 repository.PostRepo, app2 UserService) PostService {
+func NewPostService(repo repository.PostRepo, app2 UserService) PostService {
 	return &postServiceImpl{
-		repository: repository2,
+		repository: repo,
 		userApp:    app2,
 	}
 }

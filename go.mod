@@ -9,6 +9,6 @@ require (
 	github.com/gofiber/fiber/v2 v2.16.0
 	github.com/joho/godotenv v1.4.0
 	go.uber.org/zap v1.18.1
-	gorm.io/driver/mysql v1.1.3
-	gorm.io/gorm v1.21.12
+	gorm.io/driver/sqlite v1.2.4
+	gorm.io/gorm v1.22.2
 )
