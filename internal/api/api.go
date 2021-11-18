@@ -13,12 +13,14 @@ import (
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	fiberRecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/duyike/greddit/internal/api/handler"
 	"github.com/duyike/greddit/internal/api/middleware"
-	internalDB "github.com/duyike/greddit/internal/pkg/db"
-	"github.com/duyike/greddit/internal/post"
-	"github.com/duyike/greddit/internal/user"
+	"github.com/duyike/greddit/internal/model"
+	"github.com/duyike/greddit/internal/pkg/db"
+	"github.com/duyike/greddit/internal/repository"
+	"github.com/duyike/greddit/internal/service"
 )
 
 var (
@@ -41,26 +43,30 @@ func NewApp() (App, error) {
 		shutdowns []func() error
 	)
 	rand.Seed(time.Now().UnixNano())
-	db, err := internalDB.NewDb()
+	database, err := db.NewDb()
 	if err != nil {
 		return nil, err
 	}
-	//sqlDB, err := db.DB()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//shutdowns = append(shutdowns, sqlDB.Close)
+	sqlDB, err := database.DB()
+	if err != nil {
+		return nil, err
+	}
+	shutdowns = append(shutdowns, sqlDB.Close)
 
-	userRepository := user.NewRepository(db)
-	postRepository := post.NewRepository(db)
+	err = autoMigrate(database)
+	if err != nil {
+		return nil, err
+	}
 
-	userApp := user.NewApp(userRepository)
-	postApp := post.NewApp(postRepository, userApp)
+	userRepository := repository.NewUserRepo(database)
+	postRepository := repository.NewPostRepo(database)
+
+	userApp := service.NewUserService(userRepository)
+	postApp := service.NewPostService(postRepository, userApp)
 
 	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
 	fiberApp.Use(fiberRecover.New())
 	fiberApp.Use(cors.New(cors.Config{
-
 		AllowHeaders: strings.Join([]string{
 			fiber.HeaderOrigin,
 			fiber.HeaderContentLength,
@@ -69,6 +75,7 @@ func NewApp() (App, error) {
 		AllowCredentials: true,
 	}))
 	fiberApp.Use(fiberLogger.New())
+
 	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("ok")
 	})
@@ -107,4 +114,15 @@ func (a app) Listen(addr string) error {
 
 func (a app) FiberApp() *fiber.App {
 	return a.App
+}
+
+func autoMigrate(database *gorm.DB) error {
+	models := []interface{}{&model.User{}, &model.Post{}}
+	for _, m := range models {
+		err := database.AutoMigrate(m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
