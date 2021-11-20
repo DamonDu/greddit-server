@@ -5,8 +5,7 @@ org: duyike
 frameworkVersion: '2'
 
 plugins:
-  - serverless-dotenv-plugin # can read .env without settings
-
+  - serverless-dotenv-plugin
 provider:
   name: aws
   runtime: go1.x

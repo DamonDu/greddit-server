@@ -9,7 +9,7 @@ lambda: clean
 	scripts/lambda.sh
 
 deploy: clean lambda
-	sls deploy --verbose
+	sls deploy --stage prod --verbose
 
 clean:
 	rm -rf ./bin
