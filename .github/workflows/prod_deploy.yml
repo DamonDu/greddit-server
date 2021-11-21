@@ -35,12 +35,17 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
       - name: Install serverless dotenv plugin
         run: sls plugin install -n serverless-dotenv-plugin
+      - name: Make envfile
+        uses: SpicyPizza/create-envfile@v1
+        with:
+          envkey_DEPLOYMENT: PRODUCTION
+          envkey_PORT: 8080
+          envkey_UID_COOKIE_NAME: user_id
+          envkey_UID_HTTP_KEY: uid
+          envkey_SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          file_name: .env.prod
       - name: Deploy
         run: make deploy
         env:
-          DEPLOYMENT: PRODUCTION
-          PORT: 8080
-          UID_COOKIE_NAME: user_id
-          UID_HTTP_KEY: uid
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
