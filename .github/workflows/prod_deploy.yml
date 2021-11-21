@@ -35,6 +35,7 @@ jobs:
       - name: Deploy
         run: make deploy
         env:
+          DEPLOYMENT: PRODUCTION
           PORT: 8080
           UID_COOKIE_NAME: user_id
           UID_HTTP_KEY: uid

@@ -1,0 +1,20 @@
+[{
+  "id": 1,
+  "uid": 1,
+  "username": "Antosik",
+  "email": "rantosik1@myspace.com",
+  "password": "123456"
+},{
+  "id": 2,
+  "uid": 2,
+  "username": "Wilcock",
+  "email": "lwilcock2@clickbank.net",
+  "password": "123456"
+},
+  {
+    "id": 3,
+    "uid": 3,
+    "username": "Havick",
+    "email": "jhavick3@virginia.edu",
+    "password": "123456"
+  }]
