@@ -1,6 +1,8 @@
 package db
 
 import (
+	"os"
+
 	"gorm.io/gorm/schema"
 
 	"gorm.io/driver/sqlite"
@@ -8,7 +10,11 @@ import (
 )
 
 func NewDb() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
+	dsn := "greddit.db"
+	if os.Getenv("DEPLOYMENT") == "PRODUCTION" {
+		dsn = "file::memory:?cache=shared"
+	}
+	return gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},

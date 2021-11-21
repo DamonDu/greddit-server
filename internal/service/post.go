@@ -1,7 +1,10 @@
 package service
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"math/rand"
+	"os"
 
 	"github.com/duyike/greddit/internal/model"
 	"github.com/duyike/greddit/internal/repository"
@@ -13,6 +16,7 @@ type PostService interface {
 	PageQueryPost(page int, pageSize int) (model.Posts, error)
 	PageQueryPostUser(page int, pageSize int) (model.WithUsers, error)
 	Create(creatorUid int64, title, text string) (model.Post, error)
+	Init()
 }
 
 type postServiceImpl struct {
@@ -58,4 +62,28 @@ func (p postServiceImpl) PageQueryPostUser(page int, pageSize int) (model.WithUs
 
 func (p postServiceImpl) Create(creatorUid int64, title, text string) (model.Post, error) {
 	return p.repository.Create(int64(rand.Int31()), creatorUid, title, text)
+}
+
+func (p postServiceImpl) Init() {
+	jsonFile, err := os.Open("./assets/posts.json")
+	if err != nil {
+		panic(err)
+	}
+	defer func(jsonFile *os.File) {
+		err := jsonFile.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(jsonFile)
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var posts []model.Post
+	err = json.Unmarshal(byteValue, &posts)
+	if err != nil {
+		panic(err)
+	}
+	err = p.repository.Upsert(posts)
+	if err != nil {
+		panic(err)
+	}
 }

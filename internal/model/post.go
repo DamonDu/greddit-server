@@ -12,8 +12,6 @@ type Post struct {
 	Title      string `gorm:"type:text" json:"title"`
 	Text       string `gorm:"type:mediumtext" json:"text"`
 	VoteCount  int64  `json:"vote_count"`
-	Version    int64  `json:"version"`
-	Extra      string `gorm:"type:text" json:"extra"`
 }
 
 type WithUser struct {

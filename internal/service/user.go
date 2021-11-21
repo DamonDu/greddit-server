@@ -1,7 +1,10 @@
 package service
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/duyike/greddit/internal/model"
@@ -15,6 +18,7 @@ type UserService interface {
 	Register(username, email, password string) (model.User, error)
 	LoginByUsername(username, password string) (model.User, error)
 	LoginByEmail(email, password string) (model.User, error)
+	Init()
 }
 
 type userService struct {
@@ -75,4 +79,26 @@ func (u userService) login(user *model.User, err error, password string) (model.
 	return *user, nil
 }
 
-var _ UserService = &userService{}
+func (u userService) Init() {
+	jsonFile, err := os.Open("./assets/users.json")
+	if err != nil {
+		panic(err)
+	}
+	defer func(jsonFile *os.File) {
+		err := jsonFile.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(jsonFile)
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var users []model.User
+	err = json.Unmarshal(byteValue, &users)
+	if err != nil {
+		panic(err)
+	}
+	err = u.repository.Upsert(users)
+	if err != nil {
+		panic(err)
+	}
+}

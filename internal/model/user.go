@@ -11,8 +11,6 @@ type User struct {
 	Username string `gorm:"type:varchar(50);index" json:"username"`
 	Email    string `gorm:"index" json:"email"`
 	Password string `gorm:"type:varchar(50)" json:"password"`
-	Version  int64  `json:"version"`
-	Extra    string `gorm:"type:text" json:"extra"`
 }
 
 func (u *User) GetUserUid() int64 {

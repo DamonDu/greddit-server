@@ -2,6 +2,7 @@ package repository
 
 import (
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/duyike/greddit/internal/model"
 )
@@ -14,6 +15,7 @@ type UserRepo interface {
 	GetByEmail(email string) (model.User, error)
 	UsernameExists(username string) (bool, error)
 	EmailExists(email string) (bool, error)
+	Upsert([]model.User) error
 }
 
 type userRepo struct {
@@ -71,4 +73,15 @@ func (r userRepo) EmailExists(email string) (bool, error) {
 	return count > 0, err
 }
 
-var _ UserRepo = (*userRepo)(nil)
+func (r userRepo) Upsert(users []model.User) error {
+	for _, user := range users {
+		err := r.db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			UpdateAll: true,
+		}).Create(&user).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

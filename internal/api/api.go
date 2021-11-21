@@ -61,26 +61,13 @@ func NewApp() (App, error) {
 	userRepository := repository.NewUserRepo(database)
 	postRepository := repository.NewPostRepo(database)
 
-	userApp := service.NewUserService(userRepository)
-	postApp := service.NewPostService(postRepository, userApp)
+	userService := service.NewUserService(userRepository)
+	postService := service.NewPostService(postRepository, userService)
 
-	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
-	fiberApp.Use(fiberRecover.New())
-	fiberApp.Use(cors.New(cors.Config{
-		AllowHeaders: strings.Join([]string{
-			fiber.HeaderOrigin,
-			fiber.HeaderContentLength,
-			fiber.HeaderContentType,
-		}, ","),
-		AllowCredentials: true,
-	}))
-	fiberApp.Use(fiberLogger.New())
+	userService.Init()
+	postService.Init()
 
-	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
-		return ctx.Status(fiber.StatusOK).SendString("ok")
-	})
-	fiberApp.Mount("/user", handler.NewUserHandler(userApp).App)
-	fiberApp.Mount("/post", handler.NewPostHandler(postApp).App)
+	fiberApp := initFiberApp(userService, postService)
 	return app{
 		App:       fiberApp,
 		shutdowns: shutdowns,
@@ -125,4 +112,25 @@ func autoMigrate(database *gorm.DB) error {
 		}
 	}
 	return nil
+}
+
+func initFiberApp(userService service.UserService, postService service.PostService) *fiber.App {
+	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
+	fiberApp.Use(fiberRecover.New())
+	fiberApp.Use(cors.New(cors.Config{
+		AllowHeaders: strings.Join([]string{
+			fiber.HeaderOrigin,
+			fiber.HeaderContentLength,
+			fiber.HeaderContentType,
+		}, ","),
+		AllowCredentials: true,
+	}))
+	fiberApp.Use(fiberLogger.New())
+
+	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusOK).SendString("ok")
+	})
+	fiberApp.Mount("/user", handler.NewUserHandler(userService).App)
+	fiberApp.Mount("/post", handler.NewPostHandler(postService).App)
+	return fiberApp
 }
