@@ -14,9 +14,6 @@ provider:
   region: ap-northeast-1
   environment:
     DEPLOYMENT: ${env.DEPLOYMENT}
-    PORT: ${env.PORT}
-    UID_COOKIE_NAME: ${env.UID_COOKIE_NAME}
-    UID_HTTP_KEY: ${env.UID_HTTP_KEY}
 
 # Lambda function's IAM Role
 #  iamRoleStatements:

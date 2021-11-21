@@ -6,6 +6,7 @@ import (
 
 	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
+	"github.com/duyike/greddit/internal/pkg/constant"
 	"github.com/duyike/greddit/internal/service"
 	"github.com/duyike/greddit/pkg/maths"
 )
@@ -69,7 +70,7 @@ func (h *PostHandler) Create(ctx *fiber.Ctx) error {
 	if err != nil {
 		panic(err)
 	}
-	_, err = h.postApp.Create(ctx.Locals(uidHttpKey).(int64), body.Title, body.Text)
+	_, err = h.postApp.Create(ctx.Locals(constant.UidHttpKey).(int64), body.Title, body.Text)
 	if err != nil {
 		panic(err)
 	}

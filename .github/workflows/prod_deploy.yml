@@ -39,10 +39,6 @@ jobs:
         uses: SpicyPizza/create-envfile@v1
         with:
           envkey_DEPLOYMENT: PRODUCTION
-          envkey_PORT: 8080
-          envkey_UID_COOKIE_NAME: user_id
-          envkey_UID_HTTP_KEY: uid
-          envkey_SECRET_KEY: ${{ secrets.SECRET_KEY }}
           file_name: .env.prod
       - name: Deploy
         run: make deploy

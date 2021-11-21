@@ -1,17 +1,12 @@
 package middleware
 
 import (
-	"os"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/duyike/greddit/internal/pkg/constant"
 	error2 "github.com/duyike/greddit/pkg/errors"
-)
-
-var (
-	uidCookieName = os.Getenv("UID_COOKIE_NAME")
-	uidHttpKey    = os.Getenv("UID_HTTP_KEY")
 )
 
 func NewSimpleAuth(strongAuth bool) fiber.Handler {
@@ -34,7 +29,7 @@ func CheckLogin(ctx *fiber.Ctx) int64 {
 }
 
 func GetUid(ctx *fiber.Ctx) *int64 {
-	if uid, ok := ctx.Locals(uidHttpKey).(int64); !ok {
+	if uid, ok := ctx.Locals(constant.UidHttpKey).(int64); !ok {
 		return nil
 	} else {
 		return &uid
@@ -42,7 +37,7 @@ func GetUid(ctx *fiber.Ctx) *int64 {
 }
 
 func parseCookies(ctx *fiber.Ctx) {
-	uidString := ctx.Cookies(uidCookieName, "")
+	uidString := ctx.Cookies(constant.UidCookieName, "")
 	if uidString == "" {
 		return
 	}
@@ -50,5 +45,5 @@ func parseCookies(ctx *fiber.Ctx) {
 	if err != nil {
 		return
 	}
-	ctx.Locals(uidHttpKey, uid)
+	ctx.Locals(constant.UidHttpKey, uid)
 }

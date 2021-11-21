@@ -1,13 +1,13 @@
 package main
 
 import (
-	"net/http"
-	"os"
-
+	"fmt"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
+	"net/http"
 
 	"github.com/duyike/greddit/internal/api"
+	"github.com/duyike/greddit/internal/pkg/constant"
 )
 
 var (
@@ -21,8 +21,7 @@ func main() {
 	}
 
 	var (
-		port     = os.Getenv("PORT")
-		addr     = ":" + port
+		addr     = fmt.Sprintf(":%d", constant.Port)
 		shutdown = make(chan struct{})
 	)
 
