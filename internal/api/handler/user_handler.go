@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"os"
 	"strconv"
 	"time"
 
@@ -11,12 +10,8 @@ import (
 
 	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
+	"github.com/duyike/greddit/internal/pkg/constant"
 	"github.com/duyike/greddit/internal/service"
-)
-
-var (
-	uidCookieName = os.Getenv("UID_COOKIE_NAME")
-	uidHttpKey    = os.Getenv("UID_HTTP_KEY")
 )
 
 type UserHandler struct {
@@ -115,7 +110,7 @@ func (h UserHandler) buildCookie(user *model.User) *fiber.Cookie {
 		maxAge = 1800
 	}
 	return &fiber.Cookie{
-		Name:     uidCookieName,
+		Name:     constant.UidCookieName,
 		Value:    value,
 		Path:     "/",
 		Domain:   "localhost",
