@@ -1,5 +1,7 @@
-This project show you how to host an API server on AWS Lambda Function.
-**DO NOT USE IT ON PRODUCTION!!!**
+![example workflow](https://github.com/duyike/greddit-server/actions/workflows/prod_deploy.yml/badge.svg)<br>
+This project show you how to host an API server on AWS Lambda Function.<br>
+**DO NOT USE IT ON PRODUCTION!!!**<br>
+[Online Demo](https://greddit-web.vercel.app/)<br>
 ### Tech Stack
 * Golang / Gofiber for backend
 * SQLite for storage
