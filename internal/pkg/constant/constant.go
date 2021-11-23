@@ -3,6 +3,6 @@ package constant
 const (
 	Port = 8080
 
-	UidCookieName = "user_id"
-	UidHttpKey    = "uid"
+	UidHttpKey      = "uid"
+	LoginExpireDays = 3
 )

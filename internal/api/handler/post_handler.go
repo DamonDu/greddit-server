@@ -22,7 +22,7 @@ func NewPostHandler(postApp service.PostService) PostHandler {
 		postApp: postApp,
 	}
 	handler.Post("/pageQuery", handler.PageQuery)
-	handler.Post("/create", middleware.NewSimpleAuth(true), handler.Create)
+	handler.Post("/create", middleware.UserAuth(), handler.Create)
 	return handler
 }
 

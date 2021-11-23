@@ -122,6 +122,7 @@ func initFiberApp(userService service.UserService, postService service.PostServi
 			fiber.HeaderOrigin,
 			fiber.HeaderContentLength,
 			fiber.HeaderContentType,
+			fiber.HeaderAuthorization,
 		}, ","),
 		AllowCredentials: true,
 	}))
