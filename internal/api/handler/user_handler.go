@@ -2,15 +2,13 @@ package handler
 
 import (
 	"errors"
-	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
 	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
-	"github.com/duyike/greddit/internal/pkg/constant"
+	"github.com/duyike/greddit/internal/pkg/auth"
 	"github.com/duyike/greddit/internal/service"
 )
 
@@ -24,7 +22,7 @@ func NewUserHandler(userApp service.UserService) UserHandler {
 		App:     fiber.New(),
 		userApp: userApp,
 	}
-	handler.Post("/me", middleware.NewSimpleAuth(false), handler.Me)
+	handler.Post("/me", middleware.WeakUserAuth(), handler.Me)
 	handler.Post("/register", handler.Register)
 	handler.Post("/login", handler.Login)
 	handler.Post("/logout", handler.Logout)
@@ -32,7 +30,7 @@ func NewUserHandler(userApp service.UserService) UserHandler {
 }
 
 func (h *UserHandler) Me(ctx *fiber.Ctx) error {
-	uid := middleware.GetUid(ctx)
+	uid := auth.GetAuthenticatedUserID(ctx)
 	if uid == nil {
 		return ctx.JSON(nil)
 	}
@@ -65,8 +63,13 @@ func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 	if err != nil {
 		panic(err)
 	}
-	ctx.Cookie(h.buildCookie(&registerUser))
-	return nil
+	token, err := auth.GenerateJWT(registerUser.Uid)
+	if err != nil {
+		panic(err)
+	}
+	return ctx.JSON(fiber.Map{
+		"token": token,
+	})
 }
 
 func (h *UserHandler) Login(ctx *fiber.Ctx) error {
@@ -91,32 +94,15 @@ func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 	if appErr != nil {
 		panic(appErr)
 	}
-	ctx.Cookie(h.buildCookie(&u))
-	return nil
+	token, err := auth.GenerateJWT(u.Uid)
+	if err != nil {
+		panic(err)
+	}
+	return ctx.JSON(fiber.Map{
+		"token": token,
+	})
 }
 
 func (h *UserHandler) Logout(ctx *fiber.Ctx) error {
-	ctx.Cookie(h.buildCookie(nil))
 	return nil
-}
-
-func (h UserHandler) buildCookie(user *model.User) *fiber.Cookie {
-	var (
-		value  = ""
-		maxAge = -1
-	)
-	if user != nil {
-		value = strconv.FormatInt(user.Uid, 10)
-		maxAge = 1800
-	}
-	return &fiber.Cookie{
-		Name:     constant.UidCookieName,
-		Value:    value,
-		Path:     "/",
-		Domain:   "localhost",
-		MaxAge:   maxAge,
-		Expires:  time.Time{},
-		Secure:   false,
-		HTTPOnly: true,
-	}
 }

@@ -7,6 +7,8 @@ require (
 	github.com/awslabs/aws-lambda-go-api-proxy v0.11.0
 	github.com/bitrise-io/go-utils v0.0.0-20211110205926-af3caef627ae
 	github.com/gofiber/fiber/v2 v2.22.0
+	github.com/gofiber/jwt/v2 v2.2.7
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/joho/godotenv v1.4.0
 	go.uber.org/zap v1.19.1
 	gorm.io/driver/sqlite v1.2.4
