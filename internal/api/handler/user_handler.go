@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
@@ -14,13 +15,11 @@ import (
 
 type UserHandler struct {
 	*fiber.App
-	userApp service.UserService
 }
 
-func NewUserHandler(userApp service.UserService) UserHandler {
+func NewUserHandler() UserHandler {
 	handler := UserHandler{
-		App:     fiber.New(),
-		userApp: userApp,
+		App: fiber.New(),
 	}
 	handler.Post("/me", middleware.WeakUserAuth(), handler.Me)
 	handler.Post("/register", handler.Register)
@@ -30,16 +29,16 @@ func NewUserHandler(userApp service.UserService) UserHandler {
 }
 
 func (h *UserHandler) Me(ctx *fiber.Ctx) error {
-	uid := auth.GetAuthenticatedUserID(ctx)
-	if uid == nil {
+	uid, ok := auth.GetAuthenticatedUserID(ctx)
+	if !ok {
 		return ctx.JSON(nil)
 	}
-	me, err := h.userApp.QueryByUid(*uid)
+	me, err := service.User.QueryByUid(uid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
 		} else {
-			panic(err)
+			return err
 		}
 	}
 	return ctx.JSON(fiber.Map{
@@ -49,23 +48,24 @@ func (h *UserHandler) Me(ctx *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Register(ctx *fiber.Ctx) error {
-	type json struct {
-		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
-		Email    string `json:"email" binding:"required"`
+	var body struct {
+		Username string `json:"username" validate:"required"`
+		Password string `json:"password" validate:"required"`
+		Email    string `json:"email" validate:"required"`
 	}
-	var body json
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		panic(err)
+	if err := ctx.BodyParser(&body); err != nil {
+		return err
 	}
-	registerUser, err := h.userApp.Register(body.Username, body.Email, body.Password)
+	if err := validator.New().Struct(body); err != nil {
+		return err
+	}
+	registerUser, err := service.User.Register(body.Username, body.Email, body.Password)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	token, err := auth.GenerateJWT(registerUser.Uid)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	return ctx.JSON(fiber.Map{
 		"token": token,
@@ -73,30 +73,31 @@ func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Login(ctx *fiber.Ctx) error {
-	type json struct {
-		Username string `json:"username" binding:"required_without=Email"`
-		Email    string `json:"email" binding:"required_without=Username"`
-		Password string `json:"password" binding:"required"`
+	var body struct {
+		Username string `json:"username" validate:"required_without=Email"`
+		Email    string `json:"email" validate:"required_without=Username"`
+		Password string `json:"password" validate:"required"`
 	}
-	var body json
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		panic(err)
+	if err := ctx.BodyParser(&body); err != nil {
+		return err
+	}
+	if err := validator.New().Struct(body); err != nil {
+		return err
 	}
 
 	var u model.User
-	var appErr error
+	var err error
 	if body.Username != "" {
-		u, appErr = h.userApp.LoginByUsername(body.Username, body.Password)
+		u, err = service.User.LoginByUsername(body.Username, body.Password)
 	} else {
-		u, appErr = h.userApp.LoginByEmail(body.Email, body.Password)
+		u, err = service.User.LoginByEmail(body.Email, body.Password)
 	}
-	if appErr != nil {
-		panic(appErr)
+	if err != nil {
+		return err
 	}
 	token, err := auth.GenerateJWT(u.Uid)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	return ctx.JSON(fiber.Map{
 		"token": token,

@@ -11,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
-	fiberRecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -58,16 +57,10 @@ func NewApp() (App, error) {
 		return nil, err
 	}
 
-	userRepository := repository.NewUserRepo(database)
-	postRepository := repository.NewPostRepo(database)
+	repository.Init(database)
+	service.Init()
 
-	userService := service.NewUserService(userRepository)
-	postService := service.NewPostService(postRepository, userService)
-
-	userService.Init()
-	postService.Init()
-
-	fiberApp := initFiberApp(userService, postService)
+	fiberApp := initFiberApp()
 	return app{
 		App:       fiberApp,
 		shutdowns: shutdowns,
@@ -114,9 +107,9 @@ func autoMigrate(database *gorm.DB) error {
 	return nil
 }
 
-func initFiberApp(userService service.UserService, postService service.PostService) *fiber.App {
+func initFiberApp() *fiber.App {
 	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
-	fiberApp.Use(fiberRecover.New())
+	//fiberApp.Use(fiberRecover.New())
 	fiberApp.Use(cors.New(cors.Config{
 		AllowHeaders: strings.Join([]string{
 			fiber.HeaderOrigin,
@@ -131,7 +124,7 @@ func initFiberApp(userService service.UserService, postService service.PostServi
 	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("ok")
 	})
-	fiberApp.Mount("/user", handler.NewUserHandler(userService).App)
-	fiberApp.Mount("/post", handler.NewPostHandler(postService).App)
+	fiberApp.Mount("/user", handler.NewUserHandler().App)
+	fiberApp.Mount("/post", handler.NewPostHandler().App)
 	return fiberApp
 }

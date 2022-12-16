@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
-	"net/http"
 
 	"github.com/duyike/greddit/internal/api"
 	"github.com/duyike/greddit/internal/pkg/constant"

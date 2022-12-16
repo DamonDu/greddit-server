@@ -25,12 +25,12 @@ func GenerateJWT(userID int64) (string, error) {
 	return signedToken, nil
 }
 
-func GetAuthenticatedUserID(c *fiber.Ctx) *int64 {
+func GetAuthenticatedUserID(c *fiber.Ctx) (uid int64, ok bool) {
 	user := c.Locals("user").(*jwt.Token)
 	if user == nil {
-		return nil
+		return 0, false
 	}
 	claims := user.Claims.(jwt.MapClaims)
 	userID := int64(claims["user_id"].(float64))
-	return &userID
+	return userID, true
 }

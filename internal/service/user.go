@@ -18,27 +18,25 @@ type UserService interface {
 	Register(username, email, password string) (model.User, error)
 	LoginByUsername(username, password string) (model.User, error)
 	LoginByEmail(email, password string) (model.User, error)
-	Init()
 }
 
-type userService struct {
-	repository repository.UserRepo
+type userServiceImpl struct {
 }
 
-func NewUserService(repo repository.UserRepo) UserService {
-	return &userService{repository: repo}
+func NewUserService() UserService {
+	return (&userServiceImpl{}).init()
 }
 
-func (u userService) QueryByUid(uid int64) (model.User, error) {
-	return u.repository.GetByUid(uid)
+func (u userServiceImpl) QueryByUid(uid int64) (model.User, error) {
+	return repository.User.GetByUid(uid)
 }
 
-func (u userService) BatchGetByUid(uidList []int64) (model.Users, error) {
-	return u.repository.BatchGetByUid(uidList)
+func (u userServiceImpl) BatchGetByUid(uidList []int64) (model.Users, error) {
+	return repository.User.BatchGetByUid(uidList)
 }
 
-func (u userService) Register(username, email, password string) (model.User, error) {
-	usernameExists, err := u.repository.UsernameExists(username)
+func (u userServiceImpl) Register(username, email, password string) (model.User, error) {
+	usernameExists, err := repository.User.UsernameExists(username)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -46,27 +44,27 @@ func (u userService) Register(username, email, password string) (model.User, err
 		return model.User{}, errors.RegisterError.SetMsg("duplicated username")
 	}
 
-	emailExists, err := u.repository.EmailExists(email)
+	emailExists, err := repository.User.EmailExists(email)
 	if err != nil {
 		return model.User{}, err
 	}
 	if emailExists {
 		return model.User{}, errors.RegisterError.SetMsg("duplicated email")
 	}
-	return u.repository.Create(int64(rand.Int31()), username, email, password)
+	return repository.User.Create(int64(rand.Int31()), username, email, password)
 }
 
-func (u userService) LoginByUsername(username, password string) (model.User, error) {
-	user, userErr := u.repository.GetByUsername(username)
+func (u userServiceImpl) LoginByUsername(username, password string) (model.User, error) {
+	user, userErr := repository.User.GetByUsername(username)
 	return u.login(&user, userErr, password)
 }
 
-func (u userService) LoginByEmail(email, password string) (model.User, error) {
-	user, userErr := u.repository.GetByEmail(email)
+func (u userServiceImpl) LoginByEmail(email, password string) (model.User, error) {
+	user, userErr := repository.User.GetByEmail(email)
 	return u.login(&user, userErr, password)
 }
 
-func (u userService) login(user *model.User, err error, password string) (model.User, error) {
+func (u userServiceImpl) login(user *model.User, err error, password string) (model.User, error) {
 	if err != nil {
 		if strings.Contains(err.Error(), "record not found") {
 			return model.User{}, errors.LoginAccountError
@@ -79,7 +77,7 @@ func (u userService) login(user *model.User, err error, password string) (model.
 	return *user, nil
 }
 
-func (u userService) Init() {
+func (u userServiceImpl) init() userServiceImpl {
 	jsonFile, err := os.Open("./assets/users.json")
 	if err != nil {
 		panic(err)
@@ -97,8 +95,9 @@ func (u userService) Init() {
 	if err != nil {
 		panic(err)
 	}
-	err = u.repository.Upsert(users)
+	err = repository.User.Upsert(users)
 	if err != nil {
 		panic(err)
 	}
+	return u
 }
