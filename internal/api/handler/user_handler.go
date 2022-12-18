@@ -7,10 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 
-	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
-	"github.com/duyike/greddit/internal/pkg/auth"
+	"github.com/duyike/greddit/internal/pkg/api"
 	"github.com/duyike/greddit/internal/service"
+	bizError "github.com/duyike/greddit/pkg/errors"
 )
 
 type UserHandler struct {
@@ -21,7 +21,7 @@ func NewUserHandler() UserHandler {
 	handler := UserHandler{
 		App: fiber.New(),
 	}
-	handler.Post("/me", middleware.WeakUserAuth(), handler.Me)
+	handler.Post("/me", handler.Me)
 	handler.Post("/register", handler.Register)
 	handler.Post("/login", handler.Login)
 	handler.Post("/logout", handler.Logout)
@@ -29,14 +29,14 @@ func NewUserHandler() UserHandler {
 }
 
 func (h *UserHandler) Me(ctx *fiber.Ctx) error {
-	uid, ok := auth.GetAuthenticatedUserID(ctx)
-	if !ok {
+	uid, err := api.GetAuthUserID(ctx)
+	if err != nil {
 		return ctx.JSON(nil)
 	}
 	me, err := service.User.QueryByUid(uid)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil
+			return bizError.UserNotExistsError
 		} else {
 			return err
 		}
@@ -63,7 +63,7 @@ func (h *UserHandler) Register(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	token, err := auth.GenerateJWT(registerUser.Uid)
+	token, err := api.GenerateJWT(registerUser.Uid)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (h *UserHandler) Login(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	token, err := auth.GenerateJWT(u.Uid)
+	token, err := api.GenerateJWT(u.Uid)
 	if err != nil {
 		return err
 	}

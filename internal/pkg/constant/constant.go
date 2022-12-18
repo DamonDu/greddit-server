@@ -1,7 +1,6 @@
 package constant
 
 const (
-	Port = 8080
-
 	LoginExpireDays = 3
+	AuthErrorKey    = "auth_error"
 )

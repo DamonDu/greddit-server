@@ -1,0 +1,18 @@
+type Post {
+    postId: ID!
+    creatorUid: Int64!
+    title: String!
+    text: String!
+    voteCount: Int64!
+    creator: User!
+}
+
+type HasMorePosts implements HasMore {
+    hasMore: Boolean!
+    list: [Post]!
+}
+
+input CreatePost {
+    title: String!
+    text: String!
+}

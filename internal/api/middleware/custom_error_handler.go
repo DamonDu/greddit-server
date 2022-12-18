@@ -6,7 +6,7 @@ import (
 	"github.com/duyike/greddit/pkg/errors"
 )
 
-func NewBizErrorHandler() func(c *fiber.Ctx, err error) error {
+func CustomErrorHandler() func(c *fiber.Ctx, err error) error {
 	return func(c *fiber.Ctx, err error) error {
 		if e, ok := err.(*errors.BizError); ok {
 			return c.Status(e.Status).JSON(e)

@@ -20,9 +20,12 @@ func (e *BizError) SetMsg(msg string) *BizError {
 }
 
 var (
-	CommonError        = &BizError{Code: 10001, Msg: "unknown error", Status: fiber.StatusBadRequest}
-	RegisterError      = &BizError{Code: 10002, Msg: "register error", Status: fiber.StatusBadRequest}
-	LoginPasswordError = &BizError{Code: 10003, Msg: "login password error", Status: fiber.StatusBadRequest}
-	LoginAccountError  = &BizError{Code: 10004, Msg: "login account error", Status: fiber.StatusBadRequest}
-	NoLoginError       = &BizError{Code: 10005, Msg: "no login error", Status: fiber.StatusForbidden}
+	CommonError                = &BizError{Code: 10001, Msg: "Unknown error", Status: fiber.StatusBadRequest}
+	RegisterError              = &BizError{Code: 10002, Msg: "Register error", Status: fiber.StatusBadRequest}
+	LoginPasswordError         = &BizError{Code: 10003, Msg: "Login password error", Status: fiber.StatusBadRequest}
+	LoginAccountError          = &BizError{Code: 10004, Msg: "Login account error", Status: fiber.StatusBadRequest}
+	MissingOrMalformedJwtError = &BizError{Code: 10005, Msg: "Missing or malformed JWT", Status: fiber.StatusBadRequest}
+	InvalidOrExpiredJwtError   = &BizError{Code: 10006, Msg: "Invalid or expired JWT", Status: fiber.StatusUnauthorized}
+	UserNotExistsError         = &BizError{Code: 10007, Msg: "User not exists", Status: fiber.StatusBadRequest}
+	InvalidParams              = &BizError{Code: 10008, Msg: "Invalid params", Status: fiber.StatusBadRequest}
 )

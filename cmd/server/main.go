@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 
-	"github.com/duyike/greddit/internal/api"
-	"github.com/duyike/greddit/internal/pkg/constant"
+	"github.com/duyike/greddit/internal/graphql"
 )
 
 var (
@@ -22,11 +22,11 @@ func main() {
 	}
 
 	var (
-		addr     = fmt.Sprintf(":%d", constant.Port)
+		addr     = fmt.Sprintf(":%s", os.Getenv("PORT"))
 		shutdown = make(chan struct{})
 	)
 
-	app, err := api.NewApp()
+	app, err := (&graphql.App{}).Init()
 	if err != nil {
 		logger.Fatal("new app error", zap.Error(err))
 	}

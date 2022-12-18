@@ -5,9 +5,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
-	"github.com/duyike/greddit/internal/pkg/auth"
+	"github.com/duyike/greddit/internal/pkg/api"
 	"github.com/duyike/greddit/internal/service"
 	"github.com/duyike/greddit/pkg/maths"
 )
@@ -21,7 +20,7 @@ func NewPostHandler() PostHandler {
 		App: fiber.New(),
 	}
 	handler.Post("/pageQuery", handler.PageQuery)
-	handler.Post("/create", middleware.UserAuth(), handler.Create)
+	handler.Post("/create", handler.Create)
 	return handler
 }
 
@@ -67,8 +66,11 @@ func (h *PostHandler) Create(ctx *fiber.Ctx) error {
 	if err := validator.New().Struct(body); err != nil {
 		return err
 	}
-	uid, _ := auth.GetAuthenticatedUserID(ctx)
-	if _, err := service.Post.Create(uid, body.Title, body.Text); err != nil {
+	uid, err := api.GetAuthUserID(ctx)
+	if err != nil {
+		return err
+	}
+	if _, err = service.Post.Create(uid, body.Title, body.Text); err != nil {
 		return err
 	}
 	return nil
