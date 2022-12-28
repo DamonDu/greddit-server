@@ -1,4 +1,4 @@
-package auth
+package api
 
 import (
 	"os"
@@ -25,12 +25,12 @@ func GenerateJWT(userID int64) (string, error) {
 	return signedToken, nil
 }
 
-func GetAuthenticatedUserID(c *fiber.Ctx) *int64 {
-	user := c.Locals("user").(*jwt.Token)
-	if user == nil {
-		return nil
+func GetAuthUserID(c *fiber.Ctx) (int64, error) {
+	user, err := c.Locals("user").(*jwt.Token), c.Locals(constant.AuthErrorKey).(error)
+	if user == nil || err != nil {
+		return 0, err
 	}
 	claims := user.Claims.(jwt.MapClaims)
 	userID := int64(claims["user_id"].(float64))
-	return &userID
+	return userID, err
 }

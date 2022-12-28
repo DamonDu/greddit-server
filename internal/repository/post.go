@@ -22,13 +22,13 @@ func NewPostRepo(db *gorm.DB) PostRepo {
 	return &postRepoImpl{db: db}
 }
 
-func (r postRepoImpl) PageQuery(page int, pageSize int) (model.Posts, error) {
+func (r *postRepoImpl) PageQuery(page int, pageSize int) (model.Posts, error) {
 	var posts model.Posts
 	err := r.db.Scopes(db.Paginate(page, pageSize)).Order("updated_at desc, id desc").Find(&posts).Error
 	return posts, err
 }
 
-func (r postRepoImpl) Create(postId, creatorUid int64, title, text string) (model.Post, error) {
+func (r *postRepoImpl) Create(postId, creatorUid int64, title, text string) (model.Post, error) {
 	post := model.Post{
 		PostId:     postId,
 		CreatorUid: creatorUid,
@@ -39,7 +39,7 @@ func (r postRepoImpl) Create(postId, creatorUid int64, title, text string) (mode
 	return post, err
 }
 
-func (r postRepoImpl) Upsert(posts []model.Post) error {
+func (r *postRepoImpl) Upsert(posts []model.Post) error {
 	for _, post := range posts {
 		err := r.db.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "id"}},

@@ -1,121 +1,40 @@
 package api
 
 import (
-	"math/rand"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	fiberRecover "github.com/gofiber/fiber/v2/middleware/recover"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"github.com/duyike/greddit/internal/api/handler"
 	"github.com/duyike/greddit/internal/api/middleware"
-	"github.com/duyike/greddit/internal/model"
-	"github.com/duyike/greddit/internal/pkg/db"
-	"github.com/duyike/greddit/internal/repository"
-	"github.com/duyike/greddit/internal/service"
+	"github.com/duyike/greddit/internal/pkg"
 )
 
 var (
-	logger, _ = zap.NewProduction(zap.Fields(zap.String("type", "api")))
+	_, _ = zap.NewProduction(zap.Fields(zap.String("type", "api")))
 )
 
-type App interface {
-	GracefulShutdown(shutdown chan struct{})
-	Listen(addr string) error
-	FiberApp() *fiber.App
+type App struct {
+	pkg.BaseApp
 }
 
-type app struct {
-	*fiber.App
-	shutdowns []func() error
-}
-
-func NewApp() (App, error) {
-	var (
-		shutdowns []func() error
-	)
-	rand.Seed(time.Now().UnixNano())
-	database, err := db.NewDb()
+func (a *App) Init() (pkg.App, error) {
+	_, err := a.BaseApp.Init()
 	if err != nil {
 		return nil, err
 	}
-	sqlDB, err := database.DB()
-	if err != nil {
-		return nil, err
-	}
-	shutdowns = append(shutdowns, sqlDB.Close)
-
-	err = autoMigrate(database)
-	if err != nil {
-		return nil, err
-	}
-
-	userRepository := repository.NewUserRepo(database)
-	postRepository := repository.NewPostRepo(database)
-
-	userService := service.NewUserService(userRepository)
-	postService := service.NewPostService(postRepository, userService)
-
-	userService.Init()
-	postService.Init()
-
-	fiberApp := initFiberApp(userService, postService)
-	return app{
-		App:       fiberApp,
-		shutdowns: shutdowns,
-	}, nil
+	a.App = initFiberApp()
+	return a, nil
 }
 
-func (a app) GracefulShutdown(shutdown chan struct{}) {
-	var (
-		sigint = make(chan os.Signal, 1)
-	)
+var _ pkg.App = &App{}
 
-	signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
-	<-sigint
-
-	logger.Info("shutting down server gracefully")
-	if err := a.Shutdown(); err != nil {
-		logger.Fatal("shutdown error", zap.Error(err))
-	}
-	for i := range a.shutdowns {
-		err := a.shutdowns[i]()
-		if err != nil {
-			logger.Error("sub shutdown error", zap.Any("shutdowns", a.shutdowns[i]))
-		}
-	}
-	close(shutdown)
-}
-
-func (a app) Listen(addr string) error {
-	return a.App.Listen(addr)
-}
-
-func (a app) FiberApp() *fiber.App {
-	return a.App
-}
-
-func autoMigrate(database *gorm.DB) error {
-	models := []interface{}{&model.User{}, &model.Post{}}
-	for _, m := range models {
-		err := database.AutoMigrate(m)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func initFiberApp(userService service.UserService, postService service.PostService) *fiber.App {
-	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.NewBizErrorHandler()})
+func initFiberApp() *fiber.App {
+	fiberApp := fiber.New(fiber.Config{ErrorHandler: middleware.CustomErrorHandler()})
 	fiberApp.Use(fiberRecover.New())
 	fiberApp.Use(cors.New(cors.Config{
 		AllowHeaders: strings.Join([]string{
@@ -127,11 +46,12 @@ func initFiberApp(userService service.UserService, postService service.PostServi
 		AllowCredentials: true,
 	}))
 	fiberApp.Use(fiberLogger.New())
+	fiberApp.Use(middleware.UserAuth())
 
 	fiberApp.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusOK).SendString("ok")
 	})
-	fiberApp.Mount("/user", handler.NewUserHandler(userService).App)
-	fiberApp.Mount("/post", handler.NewPostHandler(postService).App)
+	fiberApp.Mount("/user", handler.NewUserHandler().App)
+	fiberApp.Mount("/post", handler.NewPostHandler().App)
 	return fiberApp
 }

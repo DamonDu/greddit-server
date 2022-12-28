@@ -13,11 +13,10 @@ var (
 )
 
 func main() {
-	app, err := api.NewApp()
+	app, err := (&api.App{}).Init()
 	if err != nil {
 		logger.Fatal("new app error", zap.Error(err))
 	}
-
 	lambdaApp := adapter.New(app.FiberApp())
 	lambda.Start(lambdaApp.ProxyWithContext)
 }

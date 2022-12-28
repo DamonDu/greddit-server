@@ -2,46 +2,45 @@ package handler
 
 import (
 	"github.com/bitrise-io/go-utils/stringutil"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/duyike/greddit/internal/api/middleware"
 	"github.com/duyike/greddit/internal/model"
-	"github.com/duyike/greddit/internal/pkg/constant"
+	"github.com/duyike/greddit/internal/pkg/api"
 	"github.com/duyike/greddit/internal/service"
 	"github.com/duyike/greddit/pkg/maths"
 )
 
 type PostHandler struct {
 	*fiber.App
-	postApp service.PostService
 }
 
-func NewPostHandler(postApp service.PostService) PostHandler {
+func NewPostHandler() PostHandler {
 	handler := PostHandler{
-		App:     fiber.New(),
-		postApp: postApp,
+		App: fiber.New(),
 	}
 	handler.Post("/pageQuery", handler.PageQuery)
-	handler.Post("/create", middleware.UserAuth(), handler.Create)
+	handler.Post("/create", handler.Create)
 	return handler
 }
 
 func (h *PostHandler) PageQuery(ctx *fiber.Ctx) error {
-	type json struct {
-		Page     int `json:"page" binding:"required"`
-		PageSize int `json:"pageSize" binding:"required"`
+	var body struct {
+		Page     int `json:"page" validate:"required"`
+		PageSize int `json:"pageSize" validate:"required"`
 	}
-	var body json
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		panic(err)
+	if err := ctx.BodyParser(&body); err != nil {
+		return err
 	}
-	postUsers, err := h.postApp.PageQueryPostUser(body.Page, body.PageSize+1)
+	if err := validator.New().Struct(body); err != nil {
+		return err
+	}
+	postUsers, err := service.Post.PageQueryPostUser(body.Page, body.PageSize+1)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	var realPostUsers = postUsers[:maths.Min(len(postUsers), body.PageSize)]
-	err = ctx.JSON(fiber.Map{
+	return ctx.JSON(fiber.Map{
 		"hasMore": len(postUsers) > body.PageSize,
 		"list": realPostUsers.MapInterface(func(p *model.WithUser) interface{} {
 			return fiber.Map{
@@ -54,25 +53,25 @@ func (h *PostHandler) PageQuery(ctx *fiber.Ctx) error {
 			}
 		}),
 	})
-	if err != nil {
-		panic(err)
-	}
-	return nil
 }
 
 func (h *PostHandler) Create(ctx *fiber.Ctx) error {
-	type json struct {
-		Title string `json:"title" binding:"required"`
-		Text  string `json:"text" binding:"required"`
+	var body struct {
+		Title string `json:"title" validate:"required"`
+		Text  string `json:"text" validate:"required"`
 	}
-	var body json
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		panic(err)
+	if err := ctx.BodyParser(&body); err != nil {
+		return err
 	}
-	_, err = h.postApp.Create(ctx.Locals(constant.UidHttpKey).(int64), body.Title, body.Text)
+	if err := validator.New().Struct(body); err != nil {
+		return err
+	}
+	uid, err := api.GetAuthUserID(ctx)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	if _, err = service.Post.Create(uid, body.Title, body.Text); err != nil {
+		return err
 	}
 	return nil
 }

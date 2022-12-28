@@ -16,36 +16,30 @@ type PostService interface {
 	PageQueryPost(page int, pageSize int) (model.Posts, error)
 	PageQueryPostUser(page int, pageSize int) (model.WithUsers, error)
 	Create(creatorUid int64, title, text string) (model.Post, error)
-	Init()
 }
 
 type postServiceImpl struct {
-	repository repository.PostRepo
-	userApp    UserService
 }
 
-func NewPostService(repo repository.PostRepo, app2 UserService) PostService {
-	return &postServiceImpl{
-		repository: repo,
-		userApp:    app2,
-	}
+func NewPostService() PostService {
+	return (&postServiceImpl{}).init()
 }
 
-func (p postServiceImpl) PageQueryPost(page int, pageSize int) (model.Posts, error) {
-	posts, err := p.repository.PageQuery(page, pageSize)
+func (p *postServiceImpl) PageQueryPost(page int, pageSize int) (model.Posts, error) {
+	posts, err := repository.Post.PageQuery(page, pageSize)
 	if err != nil {
 		return nil, err
 	}
 	return posts, err
 }
 
-func (p postServiceImpl) PageQueryPostUser(page int, pageSize int) (model.WithUsers, error) {
+func (p *postServiceImpl) PageQueryPostUser(page int, pageSize int) (model.WithUsers, error) {
 	posts, err := p.PageQueryPost(page, pageSize)
 	if err != nil {
 		return nil, err
 	}
 	creatorUidList := posts.MapInt64((*model.Post).GetCreatorUid)
-	users, err := p.userApp.BatchGetByUid(creatorUidList)
+	users, err := User.BatchGetByUid(creatorUidList)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +54,11 @@ func (p postServiceImpl) PageQueryPostUser(page int, pageSize int) (model.WithUs
 	return postUsers, err
 }
 
-func (p postServiceImpl) Create(creatorUid int64, title, text string) (model.Post, error) {
-	return p.repository.Create(int64(rand.Int31()), creatorUid, title, text)
+func (p *postServiceImpl) Create(creatorUid int64, title, text string) (model.Post, error) {
+	return repository.Post.Create(int64(rand.Int31()), creatorUid, title, text)
 }
 
-func (p postServiceImpl) Init() {
+func (p *postServiceImpl) init() *postServiceImpl {
 	jsonFile, err := os.Open("./assets/posts.json")
 	if err != nil {
 		panic(err)
@@ -82,8 +76,9 @@ func (p postServiceImpl) Init() {
 	if err != nil {
 		panic(err)
 	}
-	err = p.repository.Upsert(posts)
+	err = repository.Post.Upsert(posts)
 	if err != nil {
 		panic(err)
 	}
+	return p
 }

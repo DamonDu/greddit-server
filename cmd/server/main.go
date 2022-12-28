@@ -2,12 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
-	"go.uber.org/zap"
+	"log"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
 	"github.com/duyike/greddit/internal/api"
-	"github.com/duyike/greddit/internal/pkg/constant"
+	"github.com/duyike/greddit/internal/graphql"
+	"github.com/duyike/greddit/internal/pkg"
 )
 
 var (
@@ -15,19 +20,44 @@ var (
 )
 
 func main() {
+	cliApp := &cli.App{
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "type",
+				Aliases: []string{"t"},
+				Value:   "rest",
+				Usage:   "type of API server: rest (default) or graphql",
+			},
+		},
+		Action: runApp,
+	}
+	_ = cliApp.Run(os.Args)
+	if err := cliApp.Run(os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runApp(cCtx *cli.Context) error {
 	err := godotenv.Load(".env.local")
 	if err != nil {
 		logger.Fatal("Error loading env file")
+		return err
 	}
 
 	var (
-		addr     = fmt.Sprintf(":%d", constant.Port)
+		addr     = fmt.Sprintf(":%s", os.Getenv("PORT"))
 		shutdown = make(chan struct{})
 	)
 
-	app, err := api.NewApp()
+	var app pkg.App
+	if cCtx.String("type") == "graphql" {
+		app, err = (&graphql.App{}).Init()
+	} else {
+		app, err = (&api.App{}).Init()
+	}
 	if err != nil {
 		logger.Fatal("new app error", zap.Error(err))
+		return err
 	}
 
 	go app.GracefulShutdown(shutdown)
@@ -35,6 +65,8 @@ func main() {
 	err = app.Listen(addr)
 	if err != nil && err != http.ErrServerClosed {
 		logger.Fatal("server error", zap.Error(err))
+		return err
 	}
 	<-shutdown
+	return nil
 }

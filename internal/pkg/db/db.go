@@ -18,6 +18,7 @@ func NewDb() (*gorm.DB, error) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
+		//Logger: logger.Default.LogMode(logger.Info),
 	})
 }
 
