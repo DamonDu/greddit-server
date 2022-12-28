@@ -27,7 +27,7 @@ jobs:
         with:
           version: 0.8.1
       - name: Setup serverless framework
-        uses: Teakowa/setup-serverless@v2.0.0
+        uses: Teakowa/setup-serverless@v2.0.4
         with:
           provider: aws
         env:

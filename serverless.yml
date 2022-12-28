@@ -2,7 +2,7 @@ service: greddit-server
 #app: your-app-name
 org: duyike
 
-frameworkVersion: '2'
+frameworkVersion: '3'
 
 plugins:
   - serverless-dotenv-plugin
